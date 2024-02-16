@@ -1,0 +1,35 @@
+<div class="card-category" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(<%= @list.movies.any? ?  @list.movies.first.poster_url : "https://m.media-amazon.com/images/I/51VvD9VZDQL.__AC_SX300_SY300_QL70_FMwebp_.jpg" %>)">
+  <%= @list.name %>
+</div>
+
+<div class="d-flex align-items-center mt-2">
+  <%= link_to "Back to Lists", lists_path, class: "text-dark text-docoratio-none mx-3"  %>
+</div>
+
+<div class="d-flex-column mx-5">
+  <% @list.bookmarks.each do |bookmark| %>
+    <div class="mt-2">
+      <div class="card-product">
+        <img src=<%= bookmark.movie.poster_url %>/>
+        <div class="card-product-infos">
+          <div class="d-flex align-items-center">
+            <h2><%= bookmark.movie.title %></h2>
+            <%= link_to bookmark_path(bookmark), data: { turbo_method: :delete, turbo_confirm: "Remove #{bookmark.movie.title}?" }, class: 'mx-2' do %>
+              <i style="font-size: 15px;" class="fa-solid fa-minus text-dark"></i>
+            <% end %>
+          </div>
+          <p><%= bookmark.movie.overview %></p>
+          <p>Audience Rating - <strong><%= bookmark.movie.rating %></strong></p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="ml-0 mr-0">
+    <%= render '/bookmarks/new' %>
+  </div>
+
+  <div class="d-flex align-items-center mt-2">
+    <%= link_to "Back to Lists", lists_path, class: "text-dark text-docoratio-none mx-3"  %>
+  </div>
+</div>
