@@ -2,8 +2,7 @@ class BookmarksController < ApplicationController
   def new
     @bookmark = Bookmark.new()
     @list = List.find(params[:list_id])
-    @movies = @list.movies
-    @movies = Movie.where.not(@movies)
+    @movies = Movie.where.not(id: @list.movies).order(:title)
   end
 
   def create
