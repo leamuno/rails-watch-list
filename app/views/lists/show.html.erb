@@ -1,55 +1,68 @@
-<div class="card-category" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(<%= @list.photo.attached? ? cl_image_path(@list.photo.key) : image_path('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPQDYau3Hs4-xw1i8jVSUY4BlF4FLmg8lQqg&usqp=CAU') %>)">
-  <%= @list.name %>
+<div class="position-relative">
+  <div class="card-category card-large" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(<%= @list.photo.attached? ? cl_image_path(@list.photo.key) : asset_path('list_background.jpg') %>)">
+    <h1><%= @list.name %></h1>
+  </div>
+  <span class="movie-tag"><%= pluralize(@list.movies.size, "movie") %></span>
 </div>
-
-<div class="d-flex align-items-center mt-2">
-  <%= link_to "Back to Lists", lists_path, class: "text-light text-docoratio-none mx-3"  %>
-  <%= link_to list_path(@list), data: { turbo_method: :delete, turbo_confirm: "Remove #{@list.name}?" } do %>
-      <i style="font-size: 15px;" class="fa-solid fa-minus text-light"></i>
-  <% end %>
-</div>
-
-<div class="d-flex-column mx-5">
-
-  <% unless @list.movies  %>
-    <div class="mt-2">
-      <div class="card-product">
-        <img src=<%= @list.movies.first.poster_url %>/>
-        <div class="card-product-infos">
-          <h2><%= @list.movies.first.title %></h2>
-          <p><%= @list.movies.first.overview %></p>
-          <p>Audience Rating - <strong><%= @list.movies.first.rating %></strong></p>
-        </div>
-      </div>
+<div class="container mb-5">
+  <div class="d-flex justify-content-between my-4">
+    <span class="mb-2 d-block"><small><em class="text-muted"><%= "You haven't saved any movies yet!" if @list.movies.empty? %></em></small></span>
+    <div>
+      <button type="button" class="btn btn-flat" data-bs-toggle="modal" data-bs-target="#new_movie_modal">
+        add a movie
+      </button>
+      <%= link_to "delete this list", list_path(@list), class: "btn btn-cancel", data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this list?" } %>
     </div>
-  <% end %>
-
-  <div class="cards mt-3">
-    <% @list.bookmarks.each do |bookmark| %>
-      <div class="mt-2">
-        <div class="card-category" style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(<%= bookmark.movie.poster_url %>)">
-          <div class="d-flex align-items-center">
-            <div>
-              <div class="d-flex justify-content-between align-items-center">
-                <i style="font-size: 15px;" class="fa-solid fa-star text-info"> <%= bookmark.movie.rating %></i>
-                <%= link_to bookmark_path(bookmark), data: { turbo_method: :delete, turbo_confirm: "Remove #{bookmark.movie.title}?" },   class: 'mx-2' do %>
-                  <i style="font-size: 15px;" class="fa-solid fa-minus text-light"></i>
-                <% end %>
+  </div>
+  <div class="row my-2">
+    <% @list.movies.each do |movie| %>
+      <% bookmark = Bookmark.find_by(list: @list, movie: movie) %>
+      <div class="col-12 col-sm-6 mb-4" data-aos="zoom-in">
+        <div class="bg-white rounded shadow h-100">
+          <%= image_tag movie.poster_url, alt: movie.title, class: "movie-img rounded-top" %>
+          <div class="p-3 rounded-bottom d-flex flex-column">
+            <strong><%= movie.title %> <span class="text-muted font-weight-normal">• <%= movie.rating %> <i class="fas fa-star star-yellow"></i></span></strong>
+            <small class="text-muted"><%= movie.overview %></small>
+            <div class="d-flex align-items-end justify-content-between pt-4">
+              <div>
+                <i class="fas fa-quote-left me-2"></i><small class="flex-grow-1"><%= bookmark.comment %></small>
               </div>
-              <h2 class="d-block"><%= bookmark.movie.title %></h2>
+              <small class="text-right flex-shrink-0"><%= link_to "delete", bookmark_path(bookmark), data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to remove #{movie.title} from your #{@list.name} list"}, class: 'text-danger' %></small>
             </div>
           </div>
-
         </div>
       </div>
     <% end %>
   </div>
-
-  <div class="ml-0 mr-0">
-    <%= render '/bookmarks/new' %>
-  </div>
-
-  <div class="d-flex align-items-center mt-2">
-    <%= link_to "Back to Lists", lists_path, class: "text-dark text-docoratio-none mx-3"  %>
+  <hr class="my-5">
+  <div class="row">
+    <div class="col-12 col-sm-6">
+      <h3>Reviews</h3>
+      <% if @list.reviews.empty? %>
+        <small><em class="text-muted">Be the first one to review this list</em></small>
+      <% end %>
+      <% @list.reviews.each do |review| %>
+        <div>
+          <% review.rating.times do %>
+            <i class="fas fa-star star-yellow"></i>
+          <% end %>
+          <small><em class="text-muted"><%= distance_of_time_in_words_to_now(review.created_at) %> ago</em></small>
+          <p class="mb-0"><%= review.comment %></p>
+        </div>
+        <hr>
+      <% end %>
+    </div>
+    <div class="col-12 col-sm-6">
+      <div class="bg-white rounded p-3">
+        <h5>Add your review</h5>
+        <%= simple_form_for [@list, @review] do |f| %>
+          <%= f.input :comment, placeholder: "Add your review here..." %>
+          <%= f.input :rating, as: :select, collection: (1..5), required: true, label: false, input_html: { data: { controller: "star-rating" } } %>
+          <%= f.submit class: "btn btn-flat mt-2" %>
+        <% end %>
+      </div>
+    </div>
   </div>
 </div>
+
+<%= render "bookmarks/modal", list: @list, bookmark: @bookmark %>
